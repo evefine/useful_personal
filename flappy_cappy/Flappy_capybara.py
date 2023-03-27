@@ -13,13 +13,17 @@
 
 
 
-# In[1]:
+# In[ ]:
 
 
 import pygame
 import random
 FPS = 30
 pygame.init()
+
+# Can make it easier by increasing column gap and shorter jumps
+#easy_mode = True
+easy_mode = False
 
 if True:
     WIN_WIDTH = 600
@@ -42,10 +46,14 @@ if True:
     # set the font for the score
     SCORE_FONT = pygame.font.SysFont('comicsans', 30)
 
-
-PIPE_GAP = 150   # spacing between pipes
-PIPE_VEL = 3   # speed of pipes moving to the left
-PIPE_DISTANCE = 140  # horizontal distance between pipes
+if not easy_mode:
+    PIPE_GAP = 150   # spacing between pipes
+    PIPE_VEL = 3   # speed of pipes moving to the left
+    PIPE_DISTANCE = 140  # horizontal distance between pipes
+if easy_mode:
+    PIPE_GAP = 200   # spacing between pipes
+    PIPE_VEL = 3   # speed of pipes moving to the left
+    PIPE_DISTANCE = 180  # horizontal distance between pipes
 
 
 class Capybara:
@@ -55,6 +63,8 @@ class Capybara:
         self.vel = 0
         self.gravity = 1
         self.jump_vel = -10
+        if easy_mode:
+            self.jump_vel += 4
         self.height = self.y
         self.image = CAPYBARA_IMG
 
@@ -137,7 +147,7 @@ class Score:
         self.score += 1
 
 
-# In[2]:
+# In[ ]:
 
 
 import tkinter as tk
@@ -298,7 +308,10 @@ def main():
 if __name__ == "__main__":
     playing = True
     while playing:
-        playing = main()
+        try:
+            playing = main()
+        except:
+            pass
     quit()
 
 
