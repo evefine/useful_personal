@@ -13,7 +13,7 @@
 
 
 
-# In[ ]:
+# In[5]:
 
 
 import pygame
@@ -46,25 +46,22 @@ if True:
     # set the font for the score
     SCORE_FONT = pygame.font.SysFont('comicsans', 30)
 
-if not easy_mode:
-    PIPE_GAP = 150   # spacing between pipes
-    PIPE_VEL = 3   # speed of pipes moving to the left
-    PIPE_DISTANCE = 140  # horizontal distance between pipes
-if easy_mode:
-    PIPE_GAP = 200   # spacing between pipes
-    PIPE_VEL = 3   # speed of pipes moving to the left
-    PIPE_DISTANCE = 180  # horizontal distance between pipes
+
+PIPE_GAP = 150   # spacing between pipes
+PIPE_VEL = 3   # speed of pipes moving to the left
+PIPE_DISTANCE = 140  # horizontal distance between pipes
+
 
 
 class Capybara:
-    def __init__(self, x, y):
+    def __init__(self, x, y,vel=-10):
         self.x = x
         self.y = y
         self.vel = 0
         self.gravity = 1
-        self.jump_vel = -10
-        if easy_mode:
-            self.jump_vel += 4
+        self.jump_vel = vel
+        #if easy_mode:
+            #self.jump_vel += 2
         self.height = self.y
         self.image = CAPYBARA_IMG
 
@@ -82,10 +79,10 @@ class Capybara:
         return pygame.mask.from_surface(self.image)
 
 class Pipe:
-    def __init__(self, x, minimum=50):
+    def __init__(self, x, minimum=50,gap=150):
         self.x = x
         self.height = 0
-        self.gap = PIPE_GAP
+        self.gap = gap
         self.top = 0
         self.bottom = 0
         self.PIPE_TOP = pygame.transform.flip(PIPE_IMG, False, True)
@@ -147,7 +144,7 @@ class Score:
         self.score += 1
 
 
-# In[ ]:
+# In[6]:
 
 
 import tkinter as tk
@@ -225,13 +222,95 @@ def try_again():
     # Quit Pygame
     pygame.quit()
 
+def choose_mode():
+    # Initialize Pygame
+    pygame.init()
 
+    # Create the main window
+    root = pygame.display.set_mode((600, 600))
+    pygame.display.set_caption("Choose mode")
 
-def main():
+    # Create a font object
+    font = pygame.font.SysFont(None, 48)
+
+    # Render the text
+    text = font.render("Choose mode", True, (255, 255, 255))
+
+    # Get the dimensions of the text
+    text_width = text.get_width()
+    text_height = text.get_height()
+
+    # Get the center of the screen
+    screen_center = (root.get_width() // 2, root.get_height() // 2)
+
+    # Create a rectangle for the text
+    text_rect = text.get_rect(center=screen_center)
+
+    # Create a rectangle for the "Yes" button
+    button1_rect = pygame.Rect(0, 0, 100, 50)
+    button1_rect.center = (screen_center[0] - 75, screen_center[1] + 50)
+
+    # Create a rectangle for the "No" button
+    button2_rect = pygame.Rect(0, 0, 100, 50)
+    button2_rect.center = (screen_center[0] + 75, screen_center[1] + 50)
+
+    # Set up a loop to handle events
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                return True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Check if the "Yes" button was clicked
+                if button1_rect.collidepoint(event.pos):
+                    running = False
+                    return True
+                # Check if the "No" button was clicked
+                elif button2_rect.collidepoint(event.pos):
+                    running = False
+                    return False
+
+        # Draw the background
+        root.fill((0, 20, 80))
+
+        # Draw the text
+        root.blit(text, text_rect)
+
+        # Draw the buttons
+        pygame.draw.rect(root, (0, 255, 0), button1_rect)
+        pygame.draw.rect(root, (255, 0, 0), button2_rect)
+
+        # Draw the text on the buttons
+        button1_text = font.render("Easy", True, (255, 255, 255))
+        button2_text = font.render("Less easy", True, (255, 255, 255))
+        root.blit(button1_text, button1_rect.move(5, 5))
+        root.blit(button2_text, button2_rect.move(10, 5))
+
+        # Update the display
+        pygame.display.update()
+
+    # Quit Pygame
+    pygame.quit()
+
+# make screen for easy and hard mode selection
+
+    
+def main(play=True):
+    if not play:
+        quit()
+    easy = choose_mode()
+
+    easy_gap = 200
+    easy_dist = 180
     pygame.init()
     done = False
-    capybara = Capybara(100, 200)
-    pipes = [Pipe(400)]
+    if easy:
+        capybara = Capybara(100, 200,vel=-8)
+        pipes = [Pipe(400,gap=easy_gap)]
+    else:
+        capybara = Capybara(100, 200)
+        pipes = [Pipe(400)]
     score = Score()
     dead = False
     clock = pygame.time.Clock()
@@ -255,8 +334,7 @@ def main():
         for pipe in pipes:
             if pipe.collide(capybara):
                 dead = True
-                #pygame.quit()
-                
+                #pygame.quit()     
 
             if pipe.x + PIPE_IMG.get_width() < 0:
                 pipes_to_remove.append(pipe)
@@ -265,7 +343,11 @@ def main():
                 score.update()
 
             pipe.move()
-        if pipes[-1].x + PIPE_IMG.get_width() < WIN_WIDTH - PIPE_DISTANCE:
+        if easy:
+            distance = easy_dist
+        else:
+            distance = PIPE_DISTANCE
+        if pipes[-1].x + PIPE_IMG.get_width() < WIN_WIDTH - distance:
                 add_pipe = True
 
         if add_pipe:
@@ -273,7 +355,10 @@ def main():
                 minimum = 150
             else:
                 minimum = 50
-            pipes.append(Pipe(WIN_WIDTH,minimum))
+            if easy:
+                pipes.append(Pipe(WIN_WIDTH,minimum=minimum,gap=easy_gap))
+            else:
+                pipes.append(Pipe(WIN_WIDTH,minimum))
             add_pipe = False
 
         for pipe in pipes_to_remove:
@@ -309,10 +394,11 @@ if __name__ == "__main__":
     playing = True
     while playing:
         try:
-            playing = main()
+            playing = main(playing)
         except:
+            pygame.quit()
+            quit()
             pass
-    quit()
 
 
 # In[ ]:
